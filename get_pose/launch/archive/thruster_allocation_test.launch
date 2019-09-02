@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+   <!-- ARGUMENTS -->
+   <arg name="rviz_file" default="$(find get_pose)/cfg/rviz_cfg/control_computer.rviz"/>
+
+   <!-- NODES -->
+   <!-- Connect to ps4 controller, and publish button presses -->
+   <node pkg="joy" type="joy_node" name="joy_ps4">
+      <param name="joy_node/dev" value="/dev/input/PS4" />
+      <param name="coalesce_interval" type="double" value="0.1" />
+   </node>
+
+   <!-- Convert ps4 joystick messages to commands the robot understands -->
+   <node pkg="get_pose" type="teleop_joy.py" name="teleop_joy" />
+   <!-- Run the path planner, which keeps robot on course -->
+   <node pkg="get_pose" type="path_planning.py" name="path_planning" output="screen"/>
+   <!-- Use markers to control where the robot goes -->
+   <node pkg="get_pose" type="coverage_selection.py" name="coverage_selection" output="screen"/>
+
+   <!-- launch the dynamic reconfigure -->
+   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" />
+   <!-- Use 3D visualisation "RVIZ" -->
+   <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+
+   
+
+   <!-- Konrad's nodes for thruster_allocation package testing. This node is on Mallard.-->
+   <node pkg="thrust_allocation" type="thrust_allocation_konrad.py" name="thrust_allocation_konrad" output="screen"/> -->
+
+   <node pkg="rosserial_python" type="serial_node.py" name="rosserial_node" >
+      <param name="port" value="/dev/controller/TEENSY" />
+      <!-- To provide serial connection between control PC and mallard -->
+      <!-- Teensy node teensy_konrad.ino, is subscirbing to /thrust_allocation topic  -->
+      <!-- published by /thrust_allocation node on control PC  -->
+   </node>
+
+</launch>

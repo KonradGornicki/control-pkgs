@@ -1,0 +1,29 @@
+def contKG(goal, zero, vel, t_now, pos_now, gp):   # my controller function
+	# rospy.loginfo("goal: %s, zero: %s, abs distance: %s", goal, zero, abs(goal - zero))
+	if gp == 1 and (abs(goal - zero) > 1.7):
+		t_goal = abs((3.14 - zero - goal) / vel)
+		if t_now < abs((3.14 - zero) / vel):
+			des = zero + abs(zero) / zero * t_now * vel  # calculate desired X at t_vlad
+			rospy.loginfo("des psi: %s, current psi: %s, t_now: %s, t needed: %s", des, pos_now, t_now, abs((3.14 - zero) / vel))
+			# rospy.loginfo("dist needed: %s", 3.14 - zero)
+		elif t_now < abs((3.14 - zero - goal) / vel):
+			des = zero + abs(goal) / goal * t_now * vel
+			rospy.loginfo("des after -pi: %s, current PSI: %s", des, pos_now)
+		else:
+			des = goal
+			rospy.loginfo("des reached: %s", des)
+		err = des - pos_now
+		f_nav = err * gp
+		if abs(f_nav) > 1:
+			f_nav = f_nav / abs(f_nav)
+	else:
+		t_goal = abs((goal - zero) / vel)
+		if t_now < t_goal:
+			des = zero + abs(goal - zero) / (goal - zero) * t_now * vel  # calculate desired X at t_vlad
+		else:
+			des = goal
+		err = des - pos_now
+		f_nav = err * gp
+		if abs(f_nav) > 1:
+			f_nav = f_nav / abs(f_nav)
+	return f_nav
