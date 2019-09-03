@@ -13,7 +13,7 @@
    <!-- Control with joystick one DOF to get measurements -->
    <node pkg="arx_modelling" type="teleop_joy_arx.py" name="teleop_joy_arx" />
    <!-- Disconnect control for DOF controlled by joystick  -->
-   <node pkg="arx_modelling" type="controller_disengage.py" name="controller_disengage" />
+   <node pkg="arx_modelling" type="controller_disengage_prbs.py" name="controller_disengage_prbs" />
 
    <!-- Run the path planner, which keeps robot on course -->
    <node pkg="get_pose" type="path_planning_arx.py" name="path_planning_arx" output="screen"/>
