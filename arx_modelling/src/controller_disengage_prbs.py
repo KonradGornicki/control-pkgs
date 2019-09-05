@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import sys
-import time
-import random
+from   prbs import prbs_sequence
 
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16MultiArray
@@ -19,8 +18,7 @@ def callback(twist):
     global x_flag 
     if (x_flag == 1):
         # value between 0 to 1 corresponds to 0-400 pwm 
-        prbs = random.randint(-1,1)
-        twist.linear.x = prbs
+        twist.linear.x = 1
     else:
         twist.linear.x = 0
     # unchanged:    
@@ -34,10 +32,13 @@ def callback_joy(data):
     # twist.linear.x = 1*data.axes[1] 
 
     x_button = data.buttons[0] #on PS4 corresponds to "x" button 
+    #generate the prbs sequence:
+    prbs_seq = prbs_sequence(10,2,1)
 
     if (x_button == 1):
         #set flag
         x_flag = 1
+        
     else:
         x_flag = 0
     # pub.publish(twist)
