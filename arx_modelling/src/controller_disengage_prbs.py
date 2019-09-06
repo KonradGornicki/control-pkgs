@@ -14,6 +14,8 @@ x_flag = 0
 pub = rospy.Publisher('/mallard/cmd_vel',Twist, queue_size = 10)
 # pub_prbs = rospy.Publisher('mallard/prbs',)
 
+
+
 def callback(twist):
     global x_flag 
     if (x_flag == 1):
@@ -33,7 +35,7 @@ def callback_joy(data):
 
     x_button = data.buttons[0] #on PS4 corresponds to "x" button 
     #generate the prbs sequence:
-    prbs_seq = prbs_sequence(10,2,1)
+    
 
     if (x_button == 1):
         #set flag
@@ -53,4 +55,7 @@ def velocity_allocation  ():
     # until the node has been shutdown.
 
 if __name__=='__main__':
+    global prbs_seq
+    
+    prbs_seq = prbs_sequence(10,2,1)
     velocity_allocation()
