@@ -17,7 +17,7 @@ prbs_seq = prbs_sequence(100,4,1) #initialize the prbs signal
 a = [] #intialize to empty list; it stores prbs signal that is sequentially shortened
 
 pub = rospy.Publisher('/mallard/cmd_vel',Twist, queue_size = 10)
-# pub_prbs = rospy.Publisher('mallard/prbs',)
+pub_prbs = rospy.Publisher('mallard/prbs_input',Twist,queue_size = 10)
 
 
 def callback(twist):
@@ -28,6 +28,7 @@ def callback(twist):
         if (a): 
             #pops first element and removes it from the list
             twist.linear.x = a.pop(0)
+            pub_prbs.publish(twist)
         else:
             twist.linear.x = 0 #list is empty
 
