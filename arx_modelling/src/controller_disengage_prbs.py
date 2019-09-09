@@ -13,7 +13,7 @@ from sensor_msgs.msg import Joy
 
 x_flag = 0
 #prbs_sequence(N-number of steps,band-length of constant signal after transition, range-y values)
-prbs_seq = prbs_sequence(100,4,1) #initialize the prbs signal
+prbs_seq = prbs_sequence(100,10,1) #initialize the prbs signal
 a = [] #intialize to empty list; it stores prbs signal that is sequentially shortened
 
 pub = rospy.Publisher('/mallard/cmd_vel',Twist, queue_size = 10)
