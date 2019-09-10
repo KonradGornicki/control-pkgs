@@ -30,7 +30,7 @@ yp = 0
 qp = [0, 0, 0, 0]
 
 # control parameters
-param = dict(vel=0.1, psivel=0.2, kp=12, kd=3, kp_psi=7, kd_psi=4,
+param = dict(vel=0.1, psivel=0.2, kp=10, kd=3, kp_psi=7, kd_psi=3,
              lim=1.4, lim_psi=0.7, goal_tol=0.02, goal_tol_psi=0.1, nv=4, t_ramp=5)
 # param = dict(vel=0.1, psivel=0.2, kp=8, kd=2, kp_psi=3, kd_psi=1,
 #              lim=2, lim_psi=1, goal_tol=0.02, goal_tol_psi=0.1, nv=4) # OK params for m2

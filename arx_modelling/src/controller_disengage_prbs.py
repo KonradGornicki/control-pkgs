@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import rospy
 import sys
 from   prbs import prbs_sequence
@@ -13,7 +14,8 @@ from sensor_msgs.msg import Joy
 
 x_flag = 0
 #prbs_sequence(N-number of steps,band-length of constant signal after transition, range-y values)
-prbs_seq = prbs_sequence(100,10,1) #initialize the prbs signal
+#Range 0-1 corresponds to 1500-1900pwm spread.
+prbs_seq = prbs_sequence(100,10,0.5) #initialize the prbs signal
 a = [] #intialize to empty list; it stores prbs signal that is sequentially shortened
 
 pub = rospy.Publisher('/mallard/cmd_vel',Twist, queue_size = 10)
@@ -24,11 +26,12 @@ def callback(twist):
     global x_flag,a
 
     if (x_flag == 1):
-        # value between 0 to 1 corresponds to 0-400 pwm 
+        # if a still has elements in it :
         if (a): 
             #pops first element and removes it from the list
             twist.linear.x = a.pop(0)
             pub_prbs.publish(twist)
+        # if a is empty:
         else:
             twist.linear.x = 0 #list is empty
 
