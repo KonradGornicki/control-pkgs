@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Connect to ps4 controller, and publish button presses -->
+<node pkg="joy" type="joy_node" name="joy_ps4">
+   <param name="joy_node/dev" value="/dev/input/js" />
+   <param name="coalesce_interval" type="double" value="0.1" />
+</node>
+   
+<!-- Convert ps4 joystick messages to commands the robot understands -->
+<node pkg="get_pose" type="teleop_joy.py" name="ps4_joy_control" />
+
+<!-- launch the dynamic reconfigure -->
+<node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" />
+
+<!-- Run the path planner, which keeps robot on course -->
+<node pkg="get_pose" type="D2local_m2_velramp.py" name="path_planning_node" output="screen"/>
+
+<!-- Use 3D visualisation "RVIZ" -->
+<node pkg="rviz" type="rviz" name="rviz" />
+
+<!-- Use markers to control where the robot goes -->
+<node pkg="get_pose" type="coverage_selection.py" name="areaSelectionMarkers" output="screen"/>
+
+</launch>
