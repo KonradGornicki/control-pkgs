@@ -1,8 +1,0 @@
-prefix=/home/keir/catkin_ws/src/get_pose/build/devel
-
-Name: get_pose
-Description: Description of get_pose
-Version: 0.0.0
-Cflags: -I/home/keir/catkin_ws/src/get_pose/src
-Libs: -L/home/keir/catkin_ws/src/get_pose/build/devel/lib 
-Requires: 
