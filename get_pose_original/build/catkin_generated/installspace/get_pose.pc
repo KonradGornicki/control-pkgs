@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: get_pose
-Description: Description of get_pose
-Version: 0.0.0
-Cflags: -I/usr/local/include
-Libs: -L/usr/local/lib 
-Requires: 

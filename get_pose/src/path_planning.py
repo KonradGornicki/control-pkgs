@@ -311,7 +311,8 @@ def callbackrviz(data):
 
 if __name__ == '__main__':
     rospy.init_node('move_mallard', anonymous=True)  # initialise node "move_mallard"
-    pub = rospy.Publisher('/mallard/cmd_vel', Twist, queue_size=10)
+    # pub = rospy.Publisher('/mallard/cmd_vel', Twist, queue_size=10)
+    pub = rospy.Publisher('/mallard/thruster_command', Twist, queue_size=10)
     rospy.Subscriber("/slam_out_pose", PoseStamped, callback, param)  # subscribes to topic "/slam_out_pose"
     rospy.Subscriber("/move_base_simple/goal", PoseStamped, callbackrviz)  # subscribes to "/move_base_simple/goal"
     rospy.Subscriber('/scan', LaserScan, lidar_callback, queue_size=1)  # Lidar raw data

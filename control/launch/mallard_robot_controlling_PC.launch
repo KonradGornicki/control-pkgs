@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+   <arg name="rviz_file" default="$(find control)/cfg/rviz_cfg/control_computer.rviz"/>
+   <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+
+   <!-- Dynamic reonfigure -->
+   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" />
+   <node pkg="control" type="coverage_selection.py" name="coverage_selection"/>
+
+    <!-- Playstation controller -->
+   <node pkg="joy" type="joy_node" name="joy_ps4">
+      <param name="joy_node/dev" value="/dev/input/js" />
+      <param name="coalesce_interval" type="double" value="0.1" />
+   </node>
+   <node pkg="control" type="teleop_joy.py" name="teleop_joy" />
+      
+</launch>
