@@ -18,8 +18,8 @@ def callback(data):
  twist.linear.y = 1*data.axes[0]
  twist.angular.z = -0.7*data.axes[3]
 
- twist.angular.x = data.buttons[5]
- twist.angular.y = data.buttons[4]
+#  twist.angular.x = data.buttons[5]
+#  twist.angular.y = data.buttons[4]
 
  pub.publish(twist)
 

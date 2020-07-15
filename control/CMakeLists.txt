@@ -8,6 +8,8 @@ project(control)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  dynamic_reconfigure
   roscpp
   rospy
   std_msgs
@@ -88,10 +90,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/coverageSelection.cfg
+  cfg/mtwoParam.cfg
+)
 
 ###################################
 ## catkin specific configuration ##

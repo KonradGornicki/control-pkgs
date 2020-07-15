@@ -11,7 +11,7 @@ import auxiliary.kgstripes as kgstripes
 from std_msgs.msg import Float64, Float64MultiArray
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-from mallard_urdf.cfg import MtwoParamConfig
+from control.cfg import MtwoParamConfig
 from dynamic_reconfigure.server import Server
 from geometry_msgs.msg import PoseStamped, PoseArray
 
@@ -32,7 +32,7 @@ qp = [0, 0, 0, 0]
 psides = 0
 
 # execute back and forth motion between two goals
-back_and_forth = False
+back_and_forth = True
 single_goal = False
 counter = 0
 

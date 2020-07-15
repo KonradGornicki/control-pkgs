@@ -6,12 +6,8 @@ import numpy as np
 import tf.transformations as tft
 import auxiliary.mallardControl as control
 from std_msgs.msg import Float64, Float64MultiArray
-from mallard_urdf.cfg import MtwoParamConfig
-from dynamic_reconfigure.server import Server
-from geometry_msgs.msg import PoseStamped, PoseArray
-from sensor_msgs.msg import JointState
-from std_msgs.msg import Header
-
+from geometry_msgs.msg import PoseStamped, PoseArray,Twist
+from sensor_msgs.msg import Joy
 
 # slam position and velocity variables:
 x = 0
@@ -35,8 +31,6 @@ y_vel_goal   = 0
 psi_vel_goal = 0
 x_acc_goal   = 0
 y_acc_goal   = 0
-goal_met     = False
-goal_counter = 0
 
 # model based control variables:
 m  = 10.5 #Mallard's mass
@@ -59,40 +53,36 @@ R2_y = r2_y/by
 # simulation variables:
 a_sim=1.0556
 b_sim=1.1955
-linear_scale=1
-angular_scale=1
-# inputs to simulation:
-thruster_1 = 0
-thruster_2 = 0
-thruster_3 = 0
-thruster_4 = 0
+
+# joy variables:
+joy_button_L1 = 0
+joy_button_R1 = 0
+joy_x = 0
+joy_y = 0
+joy_z = 0
+
 # dictionary to store controller parameters
-param_model_x = dict(kp = 1, kd = 2, lim = 1.4)
-param_model_y = dict(kp = 1, kd = 1, lim = 1.4)
+param_model_x = dict(kp = 1, kd = 0.5, lim = 0.1)
+param_model_y = dict(kp = 1, kd = 0.5, lim = 0.5)
 param       = dict(kp=5, kd=1, kp_psi=1.5, kd_psi=0.5,lim=1.4, lim_psi=0.7)
 
-# ----- Functions -----
-def thruster_ctrl_msg():
-    # required to pass control forces into simulation
-    global thruster_1,thruster_2,thruster_3,thruster_4
-    msg = JointState()
-    msg.header = Header()
-    msg.header.stamp = rospy.Time.now()
-    msg.name = ['x_thr_left','x_thr_right','y_thr_left','y_thr_right']
-    msg.position = []
-    msg.velocity = []
-    msg.effort = [thruster_1,thruster_2,thruster_4,thruster_3]
-    return msg
-
-
 # ------ Callbacks -----
+def joy_callback(joy_data):
+    global joy_button_L1,joy_button_R1,joy_x,joy_y,joy_z
+    # axes:
+    joy_x =    1*joy_data.axes[1]
+    joy_y =    1*joy_data.axes[0]
+    joy_z = -0.7*joy_data.axes[3] 
+    # buttons
+    joy_button_L1 = joy_data.buttons[4]
+    joy_button_R1 = joy_data.buttons[5]
+
 # GOALS
 def goal_callback(array):
     # Publishing node: mallard_goal_selector.py, topic: /mallard/goals
     global goals_received, x_goal, y_goal,psi_goal
     global x_vel_goal,y_vel_goal,psi_vel_goal
     global x_acc_goal, y_acc_goal
-    global goal_counter
     
     # goals_received flag has always value (bool) published
     goals_received = array.data[0]
@@ -144,9 +134,10 @@ def control_callback(event):
     # for trubleshooting. To test how often is executed use: $ rostopic hz /mallard/thruster_commands.
 
     global thruster_1, thruster_2, thruster_3, thruster_4 # control forces
+    twist = Twist()
 
     #  Get forces in global frame using PD controller
-    if(goals_received == True):
+    if(goals_received == True and joy_button_L1 == 0 and joy_button_R1 == 0):
         # print("x_acc_goal: ",x_acc_goal)
         # print("y_acc_goal: ",y_acc_goal)
          # ----- control -----        
@@ -157,6 +148,10 @@ def control_callback(event):
         y_global_ctrl   = control.proportional(y, y_goal, y_vel, y_vel_goal, param['kp'], param['kd'], param['lim'])
         psi_global_ctrl = control.proportional_angle(psi, psi_goal,psi_vel,psi_vel_goal, param['kp_psi'], param['kd_psi'], param['lim_psi'])
 
+        # PD body control
+        # x_PD_body = math.cos(psi)*x_global_ctrl + math.sin(psi)*y_global_ctrl
+        # y_PD_body =-math.sin(psi)*x_global_ctrl + math.cos(psi)*y_global_ctrl 
+
         # convert into body frame:
         # aqx = Rt * [ax,ay]t
         # vqx = Rt * [x_vel,y_vel]t
@@ -166,41 +161,39 @@ def control_callback(event):
         vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
         vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
         # print("X-velocity: " + str(round(vqx,4)))
-        x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
-        y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
-        # x_body_ctrl =  math.cos(psi)*x_global_ctrl + math.sin(psi)*y_global_ctrl
-        # y_body_PD_ctrl = -math.sin(psi)*x_global_ctrl + math.cos(psi)*y_global_ctrl
-        
-        # ----- simulation -----
+        # x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
+        x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
+        # y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
+        y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
+        # x_body_ctrl =  math.cos(psi)*x_globa
+#  twist.angular.y = data.buttons[4]
         # vector forces scaled in body frame
-        x_sim   = (x_body_model_ctrl)*linear_scale
-        # x_sim   = (x_body_ctrl)*linear_scale
-        y_sim   = (y_body_model_ctrl)*linear_scale
-        # y_sim   = (y_body_PD_ctrl)*linear_scale
-        psi_sim = (-psi_global_ctrl)*angular_scale
-
-        # ----- thrust allocation -----
-        thruster_1 = 0 + 0.5*x_sim + a_sim*psi_sim
-        thruster_2 = 0 + 0.5*x_sim - a_sim*psi_sim
-        thruster_3 = 0 - 0.5*y_sim + b_sim*psi_sim
-        thruster_4 = 0 - 0.5*y_sim - b_sim*psi_sim
+        twist.linear.x   = x_body_model_ctrl
+        # twist.linear.x  = x_PD_body
+        twist.linear.y  = y_body_model_ctrl
+        # twist.linear.y  = y_PD_body
+        twist.angular.z = -psi_global_ctrl
+        
 
         # Publish forces to simulation (joint_state_publisher message)
-        pub_velocity.publish(thruster_ctrl_msg())
+        pub_velocity.publish(twist)
+
+    elif(joy_button_L1 == 1 or joy_button_R1 == 1):
+        twist.linear.x = joy_x
+        twist.linear.y = joy_y
+        twist.angular.z = joy_z
+        pub_velocity.publish(twist)   
     else:
         # ----- idle if no goals -----
-        thruster_1 = 0
-        thruster_2 = 0
-        thruster_3 = 0
-        thruster_4 = 0
-        pub_velocity.publish(thruster_ctrl_msg())
+        pub_velocity.publish(Twist())
 
 if __name__ == '__main__':
     rospy.init_node('controller', anonymous=True) 
     # PUBLISHER
-    pub_velocity = rospy.Publisher('/mallard/thruster_command',JointState,queue_size=10)
+    pub_velocity = rospy.Publisher('/mallard/thruster_command',Twist,queue_size=10)
 
     # SUBSCRIBER
+    rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
     rospy.Timer(rospy.Duration(0.1), control_callback,oneshot=False)

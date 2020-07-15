@@ -17,7 +17,7 @@ import tf2_geometry_msgs
 
 from dynamic_reconfigure.server import Server
 # from get_pose.cfg import CoverageSelectionConfig
-from mallard_urdf.cfg import CoverageSelectionConfig
+from control.cfg import CoverageSelectionConfig
 
 
 #BREAK MARKERS OUT INTO OTHER CLASSES?
