@@ -32,8 +32,8 @@ qp = [0, 0, 0, 0]
 psides = 0
 
 # execute back and forth motion between two goals
-back_and_forth = True
-single_goal = False
+back_and_forth = False
+single_goal = True
 counter = 0
 
 # stripe parameters 
@@ -139,7 +139,6 @@ def slam_callback(data, paramf):
                 n_goals = 1
                 counter = 0
 
-            
                 # print("n_goals: " + str(n_goals))
                 
         # --------------------------------------
