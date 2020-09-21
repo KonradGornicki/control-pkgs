@@ -88,7 +88,9 @@ def goal_callback(array):
     goals_received = array.data[0]
 
     # Get goal values if data is available
+
     if (goals_received == True):
+        # old
         x_goal       = array.data[1]
         y_goal       = array.data[2]
         psi_goal     = array.data[3]
@@ -97,6 +99,20 @@ def goal_callback(array):
         psi_vel_goal = array.data[6]
         x_acc_goal   = array.data[7]
         y_acc_goal   = array.data[8]
+        #  new with vel ramp inside controller:
+        xvelmax      = array.data[1]
+        yvelmax      = array.data[2]
+        x0           = array.data[3]
+        y0           = array.data[4]
+        x_goal       = array.data[5]   
+        y_goal       = array.data[6]
+        t_ramp       = array.data[7]
+        # angular
+        q_goal       = array.data[8]
+        t_goal_psi   = array.data[9]
+        q0           = array.data[10]
+        ed           = array.data[11]
+        psivel_des   = array.data[12]
 
 
 # SLAM pose
@@ -175,6 +191,12 @@ def control_callback(event):
         # twist.linear.y  = y_body_model_ctrl
         twist.linear.y  = y_PD_body
         twist.angular.z = -psi_global_ctrl
+
+        # Test uniformity of the timer
+        now = rospy.Time.now()
+        twist.angular.x = now.secs
+        twist.angular.y = now.nsecs
+        # rospy.loginfo("Current time %i %i", now.secs, now.nsecs)
         
 
         # Publish forces to simulation (joint_state_publisher message)

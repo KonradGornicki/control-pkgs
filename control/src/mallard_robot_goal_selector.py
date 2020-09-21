@@ -164,7 +164,7 @@ def slam_callback(data, paramf):
 
     # time since start of the goal:
     t_now = (data.header.stamp.secs + data.header.stamp.nsecs * 0.000000001) - t0
-
+    
     # GOALS - get desired linear positions and velocities
     xvelmax = abs(kguseful.safe_div((x_goal-x0), t_goal))
     yvelmax = abs(kguseful.safe_div((y_goal-y0), t_goal))
@@ -184,14 +184,14 @@ def slam_callback(data, paramf):
     psiveldes = kglocal.desvelpsi_fun(ed, t_goal_psi, t_now, paramf['psivel'])
     
     # VELOCITIES - calculate velocities from current and previous positions
-    dtv.appendleft(t_now - tp)  # time difference vector
-    dxv.appendleft(data.pose.position.x - xp)  # x difference vector
-    dyv.appendleft(data.pose.position.y - yp)  # y difference vector
-    dpsi = kguseful.err_psi_fun(qp, q_now)
-    dpsiv.appendleft(dpsi)  # psi difference vector
-    xvel = kglocal.vel_fun(list(dxv), list(dtv))  # velocity vectors x, y and psi
-    yvel = kglocal.vel_fun(list(dyv), list(dtv))
-    psivel = kglocal.vel_fun(list(dpsiv), list(dtv))
+    # dtv.appendleft(t_now - tp)  # time difference vector
+    # dxv.appendleft(data.pose.position.x - xp)  # x difference vector
+    # dyv.appendleft(data.pose.position.y - yp)  # y difference vector
+    # dpsi = kguseful.err_psi_fun(qp, q_now)
+    # dpsiv.appendleft(dpsi)  # psi difference vector
+    # xvel = kglocal.vel_fun(list(dxv), list(dtv))  # velocity vectors x, y and psi
+    # yvel = kglocal.vel_fun(list(dyv), list(dtv))
+    # psivel = kglocal.vel_fun(list(dpsiv), list(dtv))
 
     # Test if goal has been met:
     if abs(x_goal - data.pose.position.x) <= paramf['goal_tol']:

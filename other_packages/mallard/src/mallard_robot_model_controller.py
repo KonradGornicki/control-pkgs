@@ -36,11 +36,13 @@ y_acc_goal   = 0
 m  = 10.5 #Mallard's mass
 bx  = 0.859 # sum of thruster coeffs 
 r1_x = 1.435 # linear coeff
-r2_x = 19.262 # quadratic coeff.
+# r2_x = 19.262 # quadratic coeff.
+r2_x = 10.0
 
 by = 0.86
 r1_y =0.552
-r2_y = 16.3
+# r2_y = 16.3
+r2_y = 10
 # get coeefs. divided by b:
 Mx = m/bx
 R1_x = r1_x/bx
@@ -62,8 +64,8 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 1.0, kd = 0.1, lim = 1.0)
-param_model_y = dict(kp = 1.0, kd = 0.5, lim = 1.0)
+param_model_x = dict(kp = 0.3, kd = 0.3, lim = 1.4)
+param_model_y = dict(kp = 0.5, kd = 0.2, lim = 1.4)
 param       = dict(kp=5, kd=1, kp_psi=1.5, kd_psi=0.5,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
@@ -173,8 +175,12 @@ def control_callback(event):
         twist.linear.y  = y_body_model_ctrl
         # twist.linear.y  = y_PD_body
         twist.angular.z = -psi_global_ctrl
-        
 
+        # Test uniformity of the timer 
+        now = rospy.Time.now()
+        twist.angular.x = now.secs
+        twist.angular.y = now.nsecs
+        
         # Publish forces to simulation (joint_state_publisher message)
         pub_velocity.publish(twist)
 
