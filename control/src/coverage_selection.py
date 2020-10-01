@@ -59,6 +59,7 @@ class areaMarker(object):
         self.firstCornerName = "firstCorner" # 1st = "bottom-right" in TF frame
         firstCorner = self.initCornerMarker(firstCornerPose, self.markerFrame, self.firstCornerName, startingCorner=True) # Initialise marker
 
+        # STRIPE LENGTH CHANGE HERE:
         secondCornerPose = Pose()
         secondCornerPose.position.x = 1.0
         secondCornerPose.position.y = 1.0

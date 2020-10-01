@@ -158,9 +158,7 @@ def slam_callback(data, paramf):
         flag_first = False
         flag_goal_met = False
         # rospy.loginfo("t_goal_psi: %s, t_goal: %s", t_goal_psi, t_goal)
-        # rospy.loginfo("x: %s, y: %s", data.pose.position.x, data.pose.position.y)
-        # rospy.loginfo("xg: %s, yg: %s", x_goal, y_goal)
-        # rospy.loginfo("goal number: %s, end goal: %s", n_goals+1, goal_array.shape[0])
+        
 
     # time since start of the goal:
     t_now = (data.header.stamp.secs + data.header.stamp.nsecs * 0.000000001) - t0

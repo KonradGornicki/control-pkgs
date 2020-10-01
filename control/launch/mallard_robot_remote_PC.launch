@@ -10,6 +10,9 @@
 
    <node pkg="control" type="mallard_robot_goal_selector.py" name="goal_selector" output="screen"/>
 
+   <!-- NODES for using VICONas guidence instead of Lidar -->
+   <node pkg="control" type="vicon_pose_generator.py" name="vicon_pose" output="screen" />
+
     <!-- Playstation controller -->
    <node pkg="joy" type="joy_node" name="joy_ps4">
       <param name="joy_node/dev" value="/dev/input/js" />
@@ -21,8 +24,8 @@
   <!-- make sure that IP and port reflects the one set in vicon/system IP:port.Eth:192.168.0.174:801 -->
   <node pkg="vicon_bridge" type="vicon_bridge" name="vicon">
 		<param name="stream_mode" value="ClientPull" type="str" />
-		<param name="datastream_hostport" value="192.168.1.222:801" type="str" />
-		<param name="tf_ref_frame_id" value="/world" type="str" /> -->
-  </node>
+		<param name="datastream_hostport" value="192.168.1.100:801" type="str" />
+		<param name="tf_ref_frame_id" value="/world" type="str" />
+  </node> 
       
 </launch>

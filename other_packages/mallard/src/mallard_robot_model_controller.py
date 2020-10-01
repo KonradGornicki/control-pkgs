@@ -64,8 +64,8 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 0.3, kd = 0.3, lim = 1.4)
-param_model_y = dict(kp = 0.5, kd = 0.2, lim = 1.4)
+param_model_x = dict(kp = 0.2, kd = 0.2, lim = 1.4)
+param_model_y = dict(kp = 0.2, kd = 0.2, lim = 1.4)
 param       = dict(kp=5, kd=1, kp_psi=1.5, kd_psi=0.5,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
