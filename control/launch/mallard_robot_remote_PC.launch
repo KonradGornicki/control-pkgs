@@ -8,7 +8,9 @@
    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" />
    <node pkg="control" type="coverage_selection.py" name="coverage_selection"/>
 
+   <!-- Lidar guidance. Normal setting: -->
    <!-- <node pkg="control" type="mallard_robot_goal_selector.py" name="goal_selector" output="screen"/> -->
+   <!-- VICON guidance. Test how much Lidar error impacts controller:  -->
    <node pkg="control" type="mallard_robot_goal_selector_VICON.py" name="goal_selector" output="screen"/>
    
    <!-- NODES for using VICONas guidence instead of Lidar -->
