@@ -47,13 +47,8 @@ def vicon_callback(vicon_data):
     p.pose.orientation.z = q_result[2]
     p.pose.orientation.w = q_result[3]
     
-
-    
-
     pub_vicon_pose.publish(p)
 
-
-    
 
 
 if __name__ == '__main__':
