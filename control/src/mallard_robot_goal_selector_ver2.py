@@ -129,8 +129,8 @@ def slam_callback(data, paramf):
             n_goals = 0
         elif(single_goal):
             
-            if(counter <= 1000 and n_goals == 1):
-                if(counter % 100 == 0): print("wait for 10 seconds; counting " + str(counter/100))
+            if(counter <= 100 and n_goals == 1):
+                if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
                 n_goals = 0
                 counter += 1
                 # print("n_goals: " + str(n_goals))
@@ -161,25 +161,25 @@ def slam_callback(data, paramf):
         
 
     # time since start of the goal:
-    t_now = (data.header.stamp.secs + data.header.stamp.nsecs * 0.000000001) - t0
+    # t_now = (data.header.stamp.secs + data.header.stamp.nsecs * 0.000000001) - t0
     
-    # GOALS - get desired linear positions and velocities
-    xvelmax = abs(kguseful.safe_div((x_goal-x0), t_goal))
-    yvelmax = abs(kguseful.safe_div((y_goal-y0), t_goal))
+    # # GOALS - get desired linear positions and velocities
+    # xvelmax = abs(kguseful.safe_div((x_goal-x0), t_goal))
+    # yvelmax = abs(kguseful.safe_div((y_goal-y0), t_goal))
 
-    name = "x"
-    # print(name, " velocity: ",xvelmax)
-    xdes, xveldes,ax = kglocal.velramp(t_now, xvelmax, x0, x_goal, param['t_ramp'],name)
-    name = "y"
-    # print(name, " velocity: ",yvelmax)
-    ydes, yveldes,ay = kglocal.velramp(t_now, yvelmax, y0, y_goal, param['t_ramp'],name)
-    # print("ax: ", ax, "xveldes: ",xveldes, " xdes: ",xdes)
-    # get desired angular positions and velocities
-    qdes = kglocal.despsi_fun(q_goal, t_goal_psi, q0, t_now)
+    # name = "x"
+    # # print(name, " velocity: ",xvelmax)
+    # xdes, xveldes,ax = kglocal.velramp(t_now, xvelmax, x0, x_goal, param['t_ramp'],name)
+    # name = "y"
+    # # print(name, " velocity: ",yvelmax)
+    # ydes, yveldes,ay = kglocal.velramp(t_now, yvelmax, y0, y_goal, param['t_ramp'],name)
+    # # print("ax: ", ax, "xveldes: ",xveldes, " xdes: ",xdes)
+    # # get desired angular positions and velocities
+    # qdes = kglocal.despsi_fun(q_goal, t_goal_psi, q0, t_now)
 
-    # Angle (Psides) and angular velocity (psiveldes) in euler:
-    psides = tft.euler_from_quaternion(qdes) # Its a list: (roll,pitch,yaw)
-    psiveldes = kglocal.desvelpsi_fun(ed, t_goal_psi, t_now, paramf['psivel'])
+    # # Angle (Psides) and angular velocity (psiveldes) in euler:
+    # psides = tft.euler_from_quaternion(qdes) # Its a list: (roll,pitch,yaw)
+    # psiveldes = kglocal.desvelpsi_fun(ed, t_goal_psi, t_now, paramf['psivel'])
     
     # VELOCITIES - calculate velocities from current and previous positions
     # dtv.appendleft(t_now - tp)  # time difference vector
@@ -204,8 +204,15 @@ def slam_callback(data, paramf):
 
     #  --------- Publish goals ---------
     # publish goal array
-    array = [goals_received, xdes,ydes,psides[2],\
-             xveldes,yveldes,psiveldes,ax,ay]
+    # array = [goals_received, xdes,ydes,psides[2],\
+    #          xveldes,yveldes,psiveldes,ax,ay]
+
+    # new code
+    array = [goals_received, flag_goal_met,\
+             x0,y0,q0,x_goal,y_goal,q_goal,\
+             t_goal,t_goal_psi,ed, \
+             param['t_ramp'],param['psivel']]
+    # end new code
     data_to_send = Float64MultiArray(data = array)
     pub_goal.publish(data_to_send)
 
@@ -232,8 +239,7 @@ if __name__ == '__main__':
     rospy.init_node('goal_selector', anonymous=True)  # initialise node "move_mallard"
     # pub_goal = rospy.Publisher('/mallard/goals',PoseStamped,queue_size=10)
     pub_goal = rospy.Publisher('/mallard/goals',Float64MultiArray,queue_size=10)
-    # rospy.Subscriber("/slam_out_pose", PoseStamped, slam_callback, param)  # subscribes to topic "/slam_out_pose"
-    rospy.Subscriber("/vicon_pose",PoseStamped, slam_callback, param)
+    rospy.Subscriber("/slam_out_pose", PoseStamped, slam_callback, param)  # subscribes to topic "/slam_out_pose"
     rospy.Subscriber('/path_poses', PoseArray, path_callback, queue_size=1)
     # Gets new sets of goals
     rospy.Subscriber("/move_base_simple/goal", PoseStamped, callbackrviz) 

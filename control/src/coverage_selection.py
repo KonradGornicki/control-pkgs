@@ -54,14 +54,14 @@ class areaMarker(object):
 
         # Generate corners of the boundary box, initially with corners (-1,-1) and (1,1) in marker TF frame
         firstCornerPose = Pose()
-        firstCornerPose.position.x = -1
-        firstCornerPose.position.y = -1
+        firstCornerPose.position.x = 0.3
+        firstCornerPose.position.y = 0
         self.firstCornerName = "firstCorner" # 1st = "bottom-right" in TF frame
         firstCorner = self.initCornerMarker(firstCornerPose, self.markerFrame, self.firstCornerName, startingCorner=True) # Initialise marker
 
         # STRIPE LENGTH CHANGE HERE:
         secondCornerPose = Pose()
-        secondCornerPose.position.x = 1.0
+        secondCornerPose.position.x = 2.0
         secondCornerPose.position.y = 1.0
         self.secondCornerName = "secondCorner" # 2nd = "top-left" in TF frame
         secondCorner = self.initCornerMarker(secondCornerPose, self.markerFrame, self.secondCornerName, startingCorner=False) # Initialise marker
