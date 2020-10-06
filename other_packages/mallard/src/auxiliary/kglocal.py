@@ -104,6 +104,8 @@ def despsi_fun(goal, t_gpsi, q0f, t_nowf):
 # desired angular velocity
 def desvelpsi_fun(edf, t_goalf, t_nowf, vel_request):
     if t_nowf < t_goalf:
+        if edf == 0:
+            edf = 0.0000001 # avoid division by 0
         des = (edf / abs(edf))*vel_request
     else:
         des = 0

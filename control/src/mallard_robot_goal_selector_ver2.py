@@ -103,7 +103,7 @@ def slam_callback(data, paramf):
 
     # if no goal positions exist, then exit this callback!!!
     if len(goal_array) == 0:
-        data_to_send = Float64MultiArray(data = [goals_received])
+        data_to_send = Float64MultiArray(data = [goals_received,flag_goal_met])
         pub_goal.publish(data_to_send)
         return
 
@@ -146,7 +146,7 @@ def slam_callback(data, paramf):
         y_goal = goal_array[n_goals, 1]
         q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
         
-         
+    print("x0: " , x0, " x_goal: ",x_goal)
 
     # work out time and distance it will take to get to new goal, xy and psi
     if flag_first or flag_goal_met:
@@ -158,38 +158,8 @@ def slam_callback(data, paramf):
         flag_first = False
         flag_goal_met = False
         # rospy.loginfo("t_goal_psi: %s, t_goal: %s", t_goal_psi, t_goal)
-        
-
-    # time since start of the goal:
-    # t_now = (data.header.stamp.secs + data.header.stamp.nsecs * 0.000000001) - t0
+          
     
-    # # GOALS - get desired linear positions and velocities
-    # xvelmax = abs(kguseful.safe_div((x_goal-x0), t_goal))
-    # yvelmax = abs(kguseful.safe_div((y_goal-y0), t_goal))
-
-    # name = "x"
-    # # print(name, " velocity: ",xvelmax)
-    # xdes, xveldes,ax = kglocal.velramp(t_now, xvelmax, x0, x_goal, param['t_ramp'],name)
-    # name = "y"
-    # # print(name, " velocity: ",yvelmax)
-    # ydes, yveldes,ay = kglocal.velramp(t_now, yvelmax, y0, y_goal, param['t_ramp'],name)
-    # # print("ax: ", ax, "xveldes: ",xveldes, " xdes: ",xdes)
-    # # get desired angular positions and velocities
-    # qdes = kglocal.despsi_fun(q_goal, t_goal_psi, q0, t_now)
-
-    # # Angle (Psides) and angular velocity (psiveldes) in euler:
-    # psides = tft.euler_from_quaternion(qdes) # Its a list: (roll,pitch,yaw)
-    # psiveldes = kglocal.desvelpsi_fun(ed, t_goal_psi, t_now, paramf['psivel'])
-    
-    # VELOCITIES - calculate velocities from current and previous positions
-    # dtv.appendleft(t_now - tp)  # time difference vector
-    # dxv.appendleft(data.pose.position.x - xp)  # x difference vector
-    # dyv.appendleft(data.pose.position.y - yp)  # y difference vector
-    # dpsi = kguseful.err_psi_fun(qp, q_now)
-    # dpsiv.appendleft(dpsi)  # psi difference vector
-    # xvel = kglocal.vel_fun(list(dxv), list(dtv))  # velocity vectors x, y and psi
-    # yvel = kglocal.vel_fun(list(dyv), list(dtv))
-    # psivel = kglocal.vel_fun(list(dpsiv), list(dtv))
 
     # Test if goal has been met:
     if abs(x_goal - data.pose.position.x) <= paramf['goal_tol']:
@@ -203,30 +173,19 @@ def slam_callback(data, paramf):
                         print 'final goal met - holding position'
 
     #  --------- Publish goals ---------
-    # publish goal array
-    # array = [goals_received, xdes,ydes,psides[2],\
-    #          xveldes,yveldes,psiveldes,ax,ay]
 
     # new code
     array = [goals_received, flag_goal_met,\
-             x0,y0,q0,x_goal,y_goal,q_goal,\
+             x0,y0,q0[0],q0[1],q0[2],q0[3],\
+             x_goal,y_goal,q_goal[0],q_goal[1],q_goal[2],q_goal[3],\
              t_goal,t_goal_psi,ed, \
              param['t_ramp'],param['psivel']]
+
     # end new code
     data_to_send = Float64MultiArray(data = array)
     pub_goal.publish(data_to_send)
-
-    # xf_nav = kglocal.cont_fun(data.pose.position.x, xdes, xvel, xveldes, paramf['kp'], paramf['kd'], paramf['lim'])
-    # yf_nav = kglocal.cont_fun(data.pose.position.y, ydes, yvel, yveldes, paramf['kp'], paramf['kd'], paramf['lim'])
-    # psif_nav = kglocal.contpsi_fun(q_now, qdes, psivel, psiveldes, paramf['kp_psi'], paramf['kd_psi'],paramf['lim_psi'])
-    # pub_goal.publish(goals_stamped)
     
 
-    # PREVIOUS VALUES - change current to previous values
-    tp = t_now
-    xp = data.pose.position.x
-    yp = data.pose.position.y
-    qp = q_now
 # ------------------- end of callback ----------------
 
 # this runs when the button is clicked in Rviz - Currently doesn't do a lot

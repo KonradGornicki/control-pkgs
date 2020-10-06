@@ -48,18 +48,15 @@ time_elapsed = 0
 
 # end new code variables
 
-
 # model based control variables:
 m  = 10.5 #Mallard's mass
 bx  = 0.859 # sum of thruster coeffs 
 r1_x = 1.435 # linear coeff
-# r2_x = 19.262 # quadratic coeff.
-r2_x = 10.0
+r2_x = 19.262 # quadratic coeff.
 
 by = 0.86
 r1_y =0.552
-# r2_y = 16.3
-r2_y = 10
+r2_y = 16.3
 # get coeefs. divided by b:
 Mx = m/bx
 R1_x = r1_x/bx
@@ -81,8 +78,8 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 0.2, kd = 0.2, lim = 1.4)
-param_model_y = dict(kp = 0.2, kd = 0.2, lim = 1.4)
+param_model_x = dict(kp = 1, kd = 0.5, lim = 0.1)
+param_model_y = dict(kp = 1, kd = 0.5, lim = 0.5)
 param       = dict(kp=5, kd=1, kp_psi=1.5, kd_psi=0.5,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
@@ -143,7 +140,6 @@ def slam_callback(msg):
     global x,y,psi,x_vel,y_vel,psi_vel # slam position and derived velocity
     global time_prev,x_prev,y_prev,psi_prev # variables for next iteration
 
-
     # ----- Position and Velocity -----
     # Get current position, orientation and time:
     x   = msg.pose.position.x
@@ -171,16 +167,13 @@ def control_callback(event):
     
     # Actual control is done here. The 'event' is the rospy.Timer() duration period, can be used 
     # for trubleshooting. To test how often is executed use: $ rostopic hz /mallard/thruster_commands.
-    
     global x0,y0,q0,x_goal,y_goal,q_goal,ed
     global time_elapsed,t_goal,t_goal_psi
-    global t_ramp,psivel
+    global t_ramp,psivel  
     twist = Twist()
-
 
     #  Get forces in global frame using PD controller
     if(goals_received == True and joy_button_L1 == 0 and joy_button_R1 == 0):
-
         
         # new code - velocity ramp
         # get current time
@@ -200,57 +193,57 @@ def control_callback(event):
         # psi_des = psides[2]
         psi_vel_des = kglocal.desvelpsi_fun(ed, t_goal_psi, time_elapsed,psivel)
         # end new code
-        
-        
-        # PD control
-        # x_global_ctrl   = control.proportional(x, x_goal, x_vel, x_vel_goal, param['kp'], param['kd'], param['lim'])
-        # y_global_ctrl   = control.proportional(y, y_goal, y_vel, y_vel_goal, param['kp'], param['kd'], param['lim'])
-        psi_global_ctrl = control.proportional_angle(psi, psi_des,psi_vel,psi_vel_des, param['kp_psi'], param['kd_psi'], param['lim_psi'])
+         
         # PD body control
-        # x_PD_body = math.cos(psi)*x_global_ctrl + math.sin(psi)*y_global_ctrl
-        # y_PD_body =-math.sin(psi)*x_global_ctrl + math.cos(psi)*y_global_ctrl 
+        x_global_ctrl   = control.proportional(x, x_goal, x_vel, x_vel_goal, param['kp'], param['kd'], param['lim'])
+        y_global_ctrl   = control.proportional(y, y_goal, y_vel, y_vel_goal, param['kp'], param['kd'], param['lim'])
+        psi_global_ctrl = control.proportional_angle(psi, psi_goal,psi_vel,psi_vel_goal, param['kp_psi'], param['kd_psi'], param['lim_psi'])
 
-        
+        x_PD_body = math.cos(psi)*x_global_ctrl + math.sin(psi)*y_global_ctrl
+        y_PD_body =-math.sin(psi)*x_global_ctrl + math.cos(psi)*y_global_ctrl 
+
         # ----- Model control -----        
-        ax = control.acc_ctrl(x, x_des, x_vel, x_vel_des,x_acc_des,param_model_x['kp'], param_model_x['kd'], param_model_x['lim'])
-        ay = control.acc_ctrl(y, y_des, y_vel, y_vel_des,y_acc_des,param_model_y['kp'], param_model_y['kd'], param_model_y['lim'])
-        # Model body control:
+        # ax = control.acc_ctrl(x, x_goal, x_vel, x_vel_goal,x_acc_goal,param_model_x['kp'], param_model_x['kd'], param_model_x['lim'])
+        # ay = control.acc_ctrl(y, y_goal, y_vel, y_vel_goal,y_acc_goal,param_model_y['kp'], param_model_y['kd'], param_model_y['lim'])
+
+        # convert into body frame:
         # aqx = Rt * [ax,ay]t
         # vqx = Rt * [x_vel,y_vel]t
-        aqx =  math.cos(psi)*ax + math.sin(psi)*ay
-        aqy = -math.sin(psi)*ax + math.cos(psi)*ay
-        vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
-        vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
+        # aqx =  math.cos(psi)*ax + math.sin(psi)*ay
+        # aqy = -math.sin(psi)*ax + math.cos(psi)*ay
+        
+        # vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
+        # vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
         # print("X-velocity: " + str(round(vqx,4)))
         # x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
-        x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
+        # x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
         # y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
-        y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
-
+        # y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
+        
         # twist.angular.y = data.buttons[4]
+
         # vector forces scaled in body frame
-        twist.linear.x   = x_body_model_ctrl
-        # twist.linear.x  = x_PD_body
-        twist.linear.y  = y_body_model_ctrl
-        # twist.linear.y  = y_PD_body
+        # twist.linear.x   = x_body_model_ctrl
+        twist.linear.x  = x_PD_body
+        # twist.linear.y  = y_body_model_ctrl
+        twist.linear.y  = y_PD_body
         twist.angular.z = -psi_global_ctrl
 
-        # Test uniformity of the timer 
+        # Test uniformity of the timer
         now = rospy.Time.now()
-        # twist.angular.x = now.secs
-        # twist.angular.y = now.nsecs
+        twist.angular.x = now.secs
+        twist.angular.y = now.nsecs
         
+        
+
         # Publish forces to simulation (joint_state_publisher message)
         pub_velocity.publish(twist)
 
         array_data = [now.secs,now.nsecs,x_des,y_des,psi_des,\
                       x_vel_des,y_vel_des,psi_vel_des,\
-                      x_body_model_ctrl,y_body_model_ctrl,psi_global_ctrl]
+                      x_PD_body,y_PD_body,psi_global_ctrl]
         data_to_send = Float64MultiArray(data = array_data)
         pub_data.publish(data_to_send)
-
-        # goals_received, xdes,ydes,psides[2],\
-            #  xveldes,yveldes,psiveldes,ax,ay]
 
     elif(joy_button_L1 == 1 or joy_button_R1 == 1):
         twist.linear.x = joy_x
@@ -271,6 +264,6 @@ if __name__ == '__main__':
     rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
-    rospy.Timer(rospy.Duration(0.2), control_callback,oneshot=False)
+    rospy.Timer(rospy.Duration(0.1), control_callback,oneshot=False)
 
     rospy.spin()

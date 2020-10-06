@@ -17,7 +17,7 @@
    <!-- <node pkg="control" type="mallard_robot_goal_selector_VICON.py" name="goal_selector" output="screen"/> -->
    
    <!-- Node for using VICONas guidence instead of Lidar -->
-   <node pkg="control" type="vicon_pose_generator.py" name="vicon_pose" output="screen" />
+   <!-- <node pkg="control" type="vicon_pose_generator.py" name="vicon_pose" output="screen" /> -->
 
     <!-- Playstation controller -->
    <node pkg="joy" type="joy_node" name="joy_ps4">
