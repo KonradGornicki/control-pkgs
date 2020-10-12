@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Takes Transformstamped from Vicon, initializes (zero on position)
+# where mallard was initially spawned and transforms as PoseStamped.
+# This way slam_clback inside controller does not have to be changed.
+
 import rospy
 import tf.transformations as tft
 from geometry_msgs.msg import PoseStamped, TransformStamped

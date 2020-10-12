@@ -51,12 +51,19 @@ time_elapsed = 0
 
 # model based control variables:
 m  = 10.5 #Mallard's mass
-bx  = 0.859 # sum of thruster coeffs 
-r1_x = 1.435 # linear coeff
-# r2_x = 19.262 # quadratic coeff.
-r2_x = 10.0
+# bx  = 0.86 # sum of thruster coeffs 
+bx = 2
+# r1_x = 1.435 # linear coeff
+# r1_x = 10
+r1_x = 2.0
 
-by = 0.86
+# r2_x = 19.262 # quadratic coeff.
+# r2_x = 10.0
+# test for 0 quadratic drag:
+r2_x = 0.0
+
+# by = 0.86
+by = 2
 r1_y =0.552
 # r2_y = 16.3
 r2_y = 10
@@ -102,7 +109,7 @@ def goal_callback(array):
     global goals_received, flag_goal_met
     global x0,y0,q0
     global x_goal, y_goal,q_goal
-    global t_goal,t_goal_psi
+    global t_goal,t_goal_psi,ed
     global t_ramp, psivel
     global time_begin
     
@@ -222,10 +229,10 @@ def control_callback(event):
         vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
         vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
         # print("X-velocity: " + str(round(vqx,4)))
-        # x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
-        x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
-        # y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
-        y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
+        x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
+        # x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
+        y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
+        # y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
 
         # twist.angular.y = data.buttons[4]
         # vector forces scaled in body frame
@@ -271,6 +278,6 @@ if __name__ == '__main__':
     rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
-    rospy.Timer(rospy.Duration(0.2), control_callback,oneshot=False)
+    rospy.Timer(rospy.Duration(0.1), control_callback,oneshot=False)
 
     rospy.spin()
