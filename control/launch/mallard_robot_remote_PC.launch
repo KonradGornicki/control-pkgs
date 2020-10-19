@@ -14,8 +14,8 @@
 
    <!-- VICON guidance. Test how much Lidar error impacts controller:  -->
    <!-- needs vicon_pose_generator as well -->
-   <!-- <node pkg="control" type="mallard_robot_goal_selector_VICON_ver3.py" name="goal_selector" output="screen"/> -->
-   <!-- <node pkg="control" type="vicon_pose_generator.py" name="vicon_pose" output="screen" /> -->
+   <!-- <node pkg="control" type="mallard_robot_goal_selector_VICON_ver3.py" name="goal_selector" output="screen"/>
+   <node pkg="control" type="vicon_pose_generator.py" name="vicon_pose" output="screen" /> -->
 
     <!-- Playstation controller -->
    <node pkg="joy" type="joy_node" name="joy_ps4">

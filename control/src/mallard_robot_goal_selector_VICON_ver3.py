@@ -129,8 +129,8 @@ def slam_callback(data, paramf):
             n_goals = 0
         elif(single_goal):
             
-            if(counter <= 100 and n_goals == 1):
-                if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
+            if(counter <= 2000 and n_goals == 1):
+                if(counter % 200 == 0): print("wait for 10 seconds; counting " + str(counter/100))
                 n_goals = 0
                 counter += 1
                 # print("n_goals: " + str(n_goals))
@@ -146,7 +146,7 @@ def slam_callback(data, paramf):
         y_goal = goal_array[n_goals, 1]
         q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
         
-    print("x0: " , x0, " x_goal: ",x_goal)
+    # print("x0: " , x0, " x_goal: ",x_goal)
 
     # work out time and distance it will take to get to new goal, xy and psi
     if flag_first or flag_goal_met:

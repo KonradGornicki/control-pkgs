@@ -50,9 +50,9 @@ time_elapsed = 0
 
 
 # model based control variables:
-m  = 10.5 #Mallard's mass
+m  = 1.0 #Mallard's mass
 # bx  = 0.86 # sum of thruster coeffs 
-bx = 2
+bx = 1.0
 # r1_x = 1.435 # linear coeff
 # r1_x = 10
 r1_x = 2.0
@@ -60,13 +60,15 @@ r1_x = 2.0
 # r2_x = 19.262 # quadratic coeff.
 # r2_x = 10.0
 # test for 0 quadratic drag:
-r2_x = 0.0
+r2_x = 4.0
 
 # by = 0.86
-by = 2
-r1_y =0.552
+by = 1
+# r1_y =0.552
+r1_y = 2.0
 # r2_y = 16.3
-r2_y = 10
+# r2_y = 10
+r2_y = 4.0
 # get coeefs. divided by b:
 Mx = m/bx
 R1_x = r1_x/bx
@@ -88,9 +90,9 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 0.2, kd = 0.2, lim = 1.4)
-param_model_y = dict(kp = 0.2, kd = 0.2, lim = 1.4)
-param       = dict(kp=5, kd=1, kp_psi=1.5, kd_psi=0.5,lim=1.4, lim_psi=0.7)
+param_model_x = dict(kp = 5.0, kd = 3.0, lim = 1.4)
+param_model_y = dict(kp = 5.0, kd = 3.0, lim = 1.4)
+param       = dict(kp=5, kd=1, kp_psi=2.0, kd_psi=1.2,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
 def joy_callback(joy_data):
@@ -251,7 +253,7 @@ def control_callback(event):
         pub_velocity.publish(twist)
 
         # send [time,position,velocity,goal_position,goal_velocity,control input]
-        array_data = [now.secs,now.nsecs,\  
+        array_data = [now.secs,now.nsecs,\
                       x,y,psi,x_vel,y_vel,psi_vel,\
                       x_des,y_des,psi_des,x_vel_des,y_vel_des,psi_vel_des,\
                       x_body_model_ctrl,y_body_model_ctrl,psi_global_ctrl]
@@ -281,6 +283,6 @@ if __name__ == '__main__':
     rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
-    rospy.Timer(rospy.Duration(0.1), control_callback,oneshot=False)
+    rospy.Timer(rospy.Duration(0.0667), control_callback,oneshot=False)
 
     rospy.spin()
