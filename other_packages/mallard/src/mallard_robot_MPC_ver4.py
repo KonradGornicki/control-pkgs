@@ -48,39 +48,19 @@ time_elapsed = 0
 
 # end new code variables
 
-# step function vars:
-reset = True
-current_time = 0 
-input_vector = 0
 
 # model based control variables:
-m  = 1.0 #Mallard's mass
-# bx  = 0.86 # sum of thruster coeffs 
-bx = 1.0
-# r1_x = 1.435 # linear coeff
-# r1_x = 10
-r1_x = 2.0
+m22 = 10.5 #Mallard's mass
+m11 = 10.5
+Iz  = 0.4 
 
-# r2_x = 19.262 # quadratic coeff.
-# r2_x = 10.0
-# test for 0 quadratic drag:
-r2_x = 4.0
+r1_x = 0.01
+r2_x = 3.0
+r1_psi = 0.0026
 
-# by = 0.86
-by = 1
-# r1_y =0.552
-r1_y = 2.0
-# r2_y = 16.3
-# r2_y = 10
-r2_y = 4.0
-# get coeefs. divided by b:
-Mx = m/bx
-R1_x = r1_x/bx
-R2_x = r2_x/bx
-
-My = m/by
-R1_y = r1_y/by
-R2_y = r2_y/by
+r1_y = 0.01
+r2_y = 2.3
+r2_psi = 0.058
 
 # simulation variables:
 a_sim=1.0556
@@ -94,8 +74,10 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 5.0, kd = 3.0, lim = 1.4)
-param_model_y = dict(kp = 5.0, kd = 3.0, lim = 1.4)
+param_model_x   = dict(kp = 0.15, kd = 0.3, lim = 1.4)
+param_model_y   = dict(kp = 0.15, kd = 0.3, lim = 1.4)
+param_model_psi = dict(kp = 2.0, kd = 1.0, lim = 1.4)
+# For PD controller:
 param       = dict(kp=5, kd=1, kp_psi=2.0, kd_psi=1.2,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
@@ -170,8 +152,6 @@ def slam_callback(msg):
     x_vel   = control.get_velocity(x,x_prev,time_diff)
     y_vel   = control.get_velocity(y,y_prev,time_diff)
     psi_vel = control.get_velocity(psi,psi_prev,time_diff)
-
-    # control place holder if timer_callback inactive
     
     # ----- for next iteratioon -----
     time_prev = time
@@ -187,78 +167,106 @@ def control_callback(event):
     
     global x0,y0,q0,x_goal,y_goal,q_goal,ed
     global time_elapsed,t_goal,t_goal_psi
-    global t_ramp,psivel, reset
-    global current_time, input_vector
+    global t_ramp,psivel
     twist = Twist()
 
 
     #  Get forces in global frame using PD controller
-    if reset: 
-        current_time = 0 
-        input_vector = 0
+    if(goals_received == True and joy_button_L1 == 0 and joy_button_R1 == 0):
 
-    # Constant variables
-    loop_duration = 0.1 #seconds
-    ramp_time = 1 # seconds
-    ramp_const = 1.0
-    limit = 1.0
-    increase = limit/(ramp_time/loop_duration)
-
-    if(joy_button_L1 == 1 or joy_button_R1 == 1):
-        # start counting time in loop events
-        current_time += loop_duration
-
-        if(current_time < ramp_time):
-            input_vector += increase
-        elif(current_time >= ramp_time and current_time <= (ramp_time + ramp_const)):
-            input_vector = limit
-        elif(current_time > (ramp_time + ramp_const) and (current_time <= ramp_const + 2*ramp_time)):
-            input_vector = 0
-        else:
-            input_vector = 0
         
-        print("input_vector: ", input_vector, " current_time: ", current_time)
-        reset = False
-        twist.linear.x  = 0
-        twist.linear.y  = 0
-        twist.angular.z = input_vector
+        # new code - velocity ramp
+        # get current time
+        tn = rospy.Time.now()
+        time_now = tn.secs + (tn.nsecs * 0.000000001)
+        # time elapsed form the start of tracking the goal (equal to t_now in goal selector)
+        time_elapsed = time_now - time_begin
+        # get max velocities
+        xvelmax = abs(kguseful.safe_div((x_goal-x0),t_goal))
+        yvelmax = abs(kguseful.safe_div((y_goal-y0),t_goal))
+        # get desired position,velocity and acceleration from velocity ramp
+        x_des, x_vel_des, x_acc_des = kglocal.velramp(time_elapsed, xvelmax, x0, x_goal, t_ramp,name="x")
+        y_des, y_vel_des, y_acc_des = kglocal.velramp(time_elapsed, yvelmax, y0, y_goal, t_ramp,name="y")
+        # get desired angle:
+        qdes = kglocal.despsi_fun(q_goal, t_goal_psi, q0, time_elapsed)
+        psi_des = tft.euler_from_quaternion(qdes)[2] # Its a list: (roll,pitch,yaw)
+        # psi_des = psides[2]
+        psi_vel_des = kglocal.desvelpsi_fun(ed, t_goal_psi, time_elapsed,psivel)
+        # end new code
+        
+        
+        # PD control
+        # x_global_ctrl   = control.proportional(x, x_goal, x_vel, x_vel_goal, param['kp'], param['kd'], param['lim'])
+        # y_global_ctrl   = control.proportional(y, y_goal, y_vel, y_vel_goal, param['kp'], param['kd'], param['lim'])
+        psi_global_ctrl = control.proportional_angle(psi, psi_des,psi_vel,psi_vel_des, param['kp_psi'], param['kd_psi'], param['lim_psi'])
+        # PD body control
+        # x_PD_body = math.cos(psi)*x_global_ctrl + math.sin(psi)*y_global_ctrl
+        # y_PD_body =-math.sin(psi)*x_global_ctrl + math.cos(psi)*y_global_ctrl 
 
+        
+        # ----- Model control -----        
+        ax   = control.acc_ctrl(x, x_des, x_vel, x_vel_des,x_acc_des,param_model_x['kp'], param_model_x['kd'], param_model_x['lim'])
+        ay   = control.acc_ctrl(y, y_des, y_vel, y_vel_des,y_acc_des,param_model_y['kp'], param_model_y['kd'], param_model_y['lim'])
+        apsi = control.acc_ctrl(psi,psi_des,psi_vel,psi_vel_des,0,param_model_psi['kp'],param_model_psi['kd'],param_model_psi['lim'])
+
+
+        # Inertial to body transform:
+        # aqx = Rt * [ax,ay]t
+        # vqx = Rt * [x_vel,y_vel]t
+        aqx =  math.cos(psi)*ax + math.sin(psi)*ay
+        aqy = -math.sin(psi)*ax + math.cos(psi)*ay
+        vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
+        vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
+        # Model based control is being calcualted here in forms of torques X,Y,N:
+        x_body_model_ctrl   = m11*aqx + r1_x*vqx + r2_x*(vqx*abs(vqx))
+        y_body_model_ctrl   = m22*aqy + r1_y*vqy + r2_y*(vqy*abs(vqy))
+        psi_model_ctrl      = Iz*apsi + r1_psi*psi_vel + r2_psi*(psi_vel*abs(psi_vel))
+        
+        # twist.angular.y = data.buttons[4]
+        # vector forces scaled in body frame
+        twist.linear.x   =  x_body_model_ctrl
+        twist.linear.y   =  y_body_model_ctrl
+        # twist.angular.z  = -psi_model_ctrl
+
+        # To replace angular model by PD control(also uncomment psi_global_control):
+        twist.angular.z  = -psi_global_ctrl
+
+
+        # Test uniformity of the timer 
+        now = rospy.Time.now()
+        # twist.angular.x = now.secs
+        # twist.angular.y = now.nsecs
+        
+        # Publish forces to simulation (joint_state_publisher message)
         pub_velocity.publish(twist)
 
         # send [time,position,velocity,goal_position,goal_velocity,control input]
-        # Test uniformity of the timer 
-        # now = rospy.Time.now()
-        # array_data = [now.secs,now.nsecs,\
-        #               x,y,psi,input_vector]
-                    
-        # data_to_send = Float64MultiArray(data = array_data)
-        # pub_data.publish(data_to_send)
+        array_data = [now.secs,now.nsecs,\
+                      x,y,psi,x_vel,y_vel,psi_vel,\
+                      x_des,y_des,psi_des,x_vel_des,y_vel_des,psi_vel_des,\
+                      x_body_model_ctrl,y_body_model_ctrl,psi_model_ctrl]
+                      
+        data_to_send = Float64MultiArray(data = array_data)
+        pub_data.publish(data_to_send)
 
+        # goals_received, xdes,ydes,psides[2],\
+            #  xveldes,yveldes,psiveldes,ax,ay]
 
-    elif(joy_button_L1 == 0 and joy_button_R1 == 0):
+    elif(joy_button_L1 == 1 or joy_button_R1 == 1):
         twist.linear.x = joy_x
         twist.linear.y = joy_y
         twist.angular.z = joy_z
-        reset = True
         pub_velocity.publish(twist)   
     else:
         # ----- idle if no goals -----
         pub_velocity.publish(Twist())
-
-    # Publish controller data: input to thrusters and pose
-    now = rospy.Time.now()
-    array_data = [now.secs,now.nsecs,\
-                    x,y,psi,input_vector]
-                
-    data_to_send = Float64MultiArray(data = array_data)
-    pub_data.publish(data_to_send)
 
 if __name__ == '__main__':
     rospy.init_node('controller', anonymous=True) 
     # PUBLISHER
     pub_velocity = rospy.Publisher('/mallard/thruster_command',Twist,queue_size=10)
     pub_data = rospy.Publisher('/mallard/controller_data',Float64MultiArray,queue_size=10)
-
+    
     # SUBSCRIBER
     rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)

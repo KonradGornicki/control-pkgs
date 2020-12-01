@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <launch>
 <!-- LiDAR Guidance - noraml setting -->
-<!-- Velocity ramp inside controller -->
 <!-- <node pkg="mallard" type="mallard_robot_model_controller_ver3.py" name="controller"  output="screen"/> -->
+<node pkg="mallard" type="mallard_robot_MPC_ver4.py" name="MPC_controller"  output="screen"/>
 
 <!-- VICON guidance. Test how much Lidar error impacts controller  -->
-<node pkg="mallard" type="mallard_robot_model_controller_VICON_ver3.py" name="controller"  output="screen"/>
+<!-- <node pkg="mallard" type="mallard_robot_model_controller_VICON_ver3.py" name="controller"  output="screen"/> -->
 
 <node name="sick_tim571_2050101" pkg="sick_tim" type="sick_tim551_2050001" respawn="false" output="screen">
     <param name="range_max" type="double" value="25.0" />

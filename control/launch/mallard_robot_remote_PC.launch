@@ -10,7 +10,7 @@
 
    <!-- Lidar guidance. Normal setting: -->
    <!-- Velocity ramp inside controller -->
-   <node pkg="control" type="mallard_robot_goal_selector_ver3.py" name="goal_selector" output="screen"/>
+   <node pkg="control" type="mallard_robot_goal_selector_ver4.py" name="goal_selector" output="screen"/>
 
    <!-- VICON guidance. Test how much Lidar error impacts controller:  -->
    <!-- needs vicon_pose_generator as well -->

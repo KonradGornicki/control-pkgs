@@ -167,7 +167,15 @@ def slam_callback(msg):
     y_vel   = control.get_velocity(y,y_prev,time_diff)
     psi_vel = control.get_velocity(psi,psi_prev,time_diff)
 
-    # control place holder if timer_callback inactive
+    # Transmit vicon data toa topic
+    p = PoseStamped()
+    # Write to PoseStamp positions:
+    p.header.stamp= rospy.Time.now()
+    p.pose.position.x  = x
+    p.pose.position.y  = y
+    # Angle
+    p.pose.position.z  = psi
+    pub_vicon_test.publish(p)
     
     # ----- for next iteratioon -----
     time_prev = time
@@ -278,12 +286,13 @@ if __name__ == '__main__':
     # PUBLISHER
     pub_velocity = rospy.Publisher('/mallard/thruster_command',Twist,queue_size=10)
     pub_data = rospy.Publisher('/mallard/controller_data',Float64MultiArray,queue_size=10)
+    pub_vicon_test = rospy.Publisher('/mallard/vicon_pose_ctrl',PoseStamped,queue_size=10)
 
     # SUBSCRIBER
     rospy.Subscriber("/joy",Joy,joy_callback)
     # rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/vicon_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
-    rospy.Timer(rospy.Duration(0.0333), control_callback,oneshot=False)
+    rospy.Timer(rospy.Duration(0.03333), control_callback,oneshot=False)
 
     rospy.spin()

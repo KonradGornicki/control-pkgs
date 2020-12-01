@@ -50,31 +50,35 @@ time_elapsed = 0
 
 
 # model based control variables:
-m  = 1.0 #Mallard's mass
+m22  = 1.0 #Mallard's mass
+m11 = 10.5
 # bx  = 0.86 # sum of thruster coeffs 
-bx = 1.0
+
 # r1_x = 1.435 # linear coeff
 # r1_x = 10
-r1_x = 2.0
+# r1_x = 1.5
+r1_x = 0.01
+
 
 # r2_x = 19.262 # quadratic coeff.
 # r2_x = 10.0
 # test for 0 quadratic drag:
-r2_x = 4.0
+# r2_x = 3.5
+r2_x = 3.0
 
 # by = 0.86
 by = 1
 # r1_y =0.552
-r1_y = 2.0
+r1_y = 1.0
 # r2_y = 16.3
 # r2_y = 10
-r2_y = 4.0
+r2_y = 3.0
 # get coeefs. divided by b:
-Mx = m/bx
-R1_x = r1_x/bx
-R2_x = r2_x/bx
+Mx = m11
+R1_x = r1_x
+R2_x = r2_x
 
-My = m/by
+My = m22/by
 R1_y = r1_y/by
 R2_y = r2_y/by
 
@@ -90,8 +94,8 @@ joy_y = 0
 joy_z = 0
 
 # dictionary to store controller parameters
-param_model_x = dict(kp = 5.0, kd = 3.0, lim = 1.4)
-param_model_y = dict(kp = 5.0, kd = 3.0, lim = 1.4)
+param_model_x = dict(kp = 0.15, kd = 0.3, lim = 1.4)
+param_model_y = dict(kp = 3.0, kd = 2.0, lim = 1.4)
 param       = dict(kp=5, kd=1, kp_psi=2.0, kd_psi=1.2,lim=1.4, lim_psi=0.7)
 
 # ------ Callbacks -----
@@ -166,8 +170,6 @@ def slam_callback(msg):
     x_vel   = control.get_velocity(x,x_prev,time_diff)
     y_vel   = control.get_velocity(y,y_prev,time_diff)
     psi_vel = control.get_velocity(psi,psi_prev,time_diff)
-
-    # control place holder if timer_callback inactive
     
     # ----- for next iteratioon -----
     time_prev = time
@@ -231,7 +233,7 @@ def control_callback(event):
         vqx =  math.cos(psi)*x_vel + math.sin(psi)*y_vel
         vqy = -math.sin(psi)*x_vel + math.cos(psi)*y_vel
         # print("X-velocity: " + str(round(vqx,4)))
-        x_body_model_ctrl = Mx*aqx + R1_x*vqx + R2_x*(vqx*abs(vqx))
+        x_body_model_ctrl = Mx*aqx + m22*vqy*psi_vel +R1_x*vqx + R2_x*(vqx*abs(vqx))
         # x_body_model_ctrl = Mx*aqx + R2_x*(vqx*abs(vqx))
         y_body_model_ctrl = My*aqy + R1_y*vqy + R2_y*(vqy*abs(vqy))
         # y_body_model_ctrl = My*aqy + R2_y*(vqy*abs(vqy))
@@ -278,11 +280,11 @@ if __name__ == '__main__':
     # PUBLISHER
     pub_velocity = rospy.Publisher('/mallard/thruster_command',Twist,queue_size=10)
     pub_data = rospy.Publisher('/mallard/controller_data',Float64MultiArray,queue_size=10)
-
+    
     # SUBSCRIBER
     rospy.Subscriber("/joy",Joy,joy_callback)
     rospy.Subscriber("/slam_out_pose",PoseStamped,slam_callback)
     rospy.Subscriber("/mallard/goals",Float64MultiArray,goal_callback)
-    rospy.Timer(rospy.Duration(0.0667), control_callback,oneshot=False)
+    rospy.Timer(rospy.Duration(0.1), control_callback,oneshot=False)
 
     rospy.spin()

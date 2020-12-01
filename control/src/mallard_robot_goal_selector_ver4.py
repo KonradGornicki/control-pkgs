@@ -33,7 +33,13 @@ psides = 0
 
 # execute back and forth motion between two goals
 back_and_forth = False
-single_goal = True
+single_goal = False
+face_wall = True
+counter_flag = True
+goal2_reached = True
+goal3_reached = True
+q0_euler_adj = 0
+q_goal_euler_adj = 0
 counter = 0
 
 # stripe parameters 
@@ -97,7 +103,8 @@ def slam_callback(data, paramf):
     global dtv, dxv, dyv, tp, xp, yp, qp, ed
     global flag_first, flag_goal_met, flag_end, n_safe, n_goals, goals_received
     global x_goal, y_goal, q_goal, t_goal, t_goal_psi, x0, y0, q0, t0, goal_array,psides
-    global back_and_forth,single_goal,counter
+    global back_and_forth,single_goal,counter,face_wall,counter_flag,q_goal_euler_adj,q0_euler_adj
+    global goal2_reached,goal3_reached
 
     
 
@@ -116,21 +123,23 @@ def slam_callback(data, paramf):
         q0 = q_now
         x_goal = goal_array[n_goals, 0]
         y_goal = goal_array[n_goals, 1]
-        q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
+        # q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
+        # goal_array[n_goals, 2] - math.pi/2
+        q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2] - math.pi/2)
     # if goal has been met assign new goals:
     if flag_goal_met:
         x0 = goal_array[n_goals, 0]
         y0 = goal_array[n_goals, 1]
-        q0 = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
+        q0_euler_adj = goal_array[n_goals, 2] + q0_euler_adj
+        q0 = tft.quaternion_from_euler(0, 0, q0_euler_adj)
         n_goals = n_goals + 1
         # --------------------------------------
         # to go back nad forth between two goals
         if(n_goals > 1 and back_and_forth):
             n_goals = 0
         elif(single_goal):
-            
-            if(counter <= 100 and n_goals == 1):
-                if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
+            if(counter <= 50 and n_goals == 1):
+                if(counter % 10 == 0): print("wait for 5 seconds; counting " + str(counter/10))
                 n_goals = 0
                 counter += 1
                 # print("n_goals: " + str(n_goals))
@@ -138,13 +147,60 @@ def slam_callback(data, paramf):
                 if(n_goals == 2): print("GOAL REACHED")
                 n_goals = 1
                 counter = 0
+        # new code for U-shape facing wall
+        elif(face_wall):
+            if(n_goals == 1):
+                if(counter <= 100):
+                    if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
+                    n_goals = n_goals - 1 #maitain goal 0 for 10seconds
+                    # change angle to face wall
+                    q0_euler_adj = (-math.pi/2)
+                    q_goal_euler_adj = (-math.pi/2) 
+                    counter += 1
+                else:
+                    q0_euler_adj = (-math.pi/2)
+                    q_goal_euler_adj = (-math.pi/2)
+            elif(n_goals == 2):
+                if(counter > 100 and goal2_reached):
+                    counter = 0 
+                    goal2_reached = False
+                if(counter <= 100):
+                    if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
+                    n_goals = n_goals - 1 #maitain goal 1 for 10seconds
+                    q0_euler_adj = 0
+                    q_goal_euler_adj = 0
+                    counter += 1
+                else:
+                    # proceed to goal 2
+                    q0_euler_adj = 0
+                    q_goal_euler_adj = 0
+            elif(n_goals == 3):
+                if(counter > 100 and goal3_reached):
+                    counter = 0 
+                    goal3_reached = False
+                if(counter <= 100):
+                    if(counter % 10 == 0): print("wait for 10 seconds; counting " + str(counter/10))
+                    n_goals = n_goals - 1 #maitain goal 1 for 10seconds
+                    q0_euler_adj = (math.pi/2)
+                    q_goal_euler_adj = (math.pi/2)
+                    counter += 1
+                else:
+                    q0_euler_adj = (math.pi/2)
+                    q_goal_euler_adj = (math.pi/2)
+            elif(n_goals == 4):
+                # maitain this goal
+                q0_euler_adj = (math.pi/2)
+                q_goal_euler_adj = (math.pi/2)
 
-                # print("n_goals: " + str(n_goals))
                 
         # --------------------------------------
         x_goal = goal_array[n_goals, 0]
         y_goal = goal_array[n_goals, 1]
-        q_goal = tft.quaternion_from_euler(0, 0, goal_array[n_goals, 2])
+        q_goal_euler_adj = goal_array[n_goals, 2] + q_goal_euler_adj
+        q_goal = tft.quaternion_from_euler(0, 0, q_goal_euler_adj)
+        # print("n_goals: " + str(n_goals))
+        print(" n_goals: " + str(n_goals) + ", q_goal is: " + str(q_goal_euler_adj))
+
 
     # work out time and distance it will take to get to new goal, xy and psi
     if flag_first or flag_goal_met:
